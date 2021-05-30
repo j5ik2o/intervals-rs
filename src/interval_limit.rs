@@ -94,18 +94,18 @@ impl<T: Clone + Eq + Ord + PartialEq + PartialOrd> IntervalLimit<T> {
         }
     }
 
-    fn infinity(&self) -> bool {
+    pub fn infinity(&self) -> bool {
         match self.value {
             LimitValue::Limitless => true,
             _ => false,
         }
     }
 
-    fn is_open(&self) -> bool {
+    pub fn is_open(&self) -> bool {
         !self.closed
     }
 
-    fn is_upper(&self) -> bool {
+    pub fn is_upper(&self) -> bool {
         !self.lower
     }
 }
