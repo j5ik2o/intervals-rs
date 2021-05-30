@@ -1,22 +1,22 @@
 use std::cmp::Ordering;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, Formatter, Debug};
 
 use crate::LimitValue;
 
-#[derive(Debug, Clone, Eq, Ord)]
-pub struct IntervalLimit<T: Clone + Eq + Ord + PartialOrd + PartialEq> {
+#[derive(Debug, Clone)]
+pub struct IntervalLimit<T: Debug + Clone + PartialOrd + PartialEq> {
   closed: bool,
   lower: bool,
   value: LimitValue<T>,
 }
 
-impl<T: Clone + Eq + Ord + PartialEq + PartialOrd> PartialEq for IntervalLimit<T> {
+impl<T: Debug + Clone + PartialEq + PartialOrd> PartialEq for IntervalLimit<T> {
   fn eq(&self, other: &Self) -> bool {
     self.partial_cmp(other) == Some(Ordering::Equal)
   }
 }
 
-impl<T: Clone + Eq + Ord + PartialEq + PartialOrd> PartialOrd for IntervalLimit<T> {
+impl<T: Debug + Clone + PartialEq + PartialOrd> PartialOrd for IntervalLimit<T> {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
     if self.value.is_limitless() && other.value.is_limitless() {
       if self.lower == other.lower {
@@ -50,12 +50,12 @@ impl<T: Clone + Eq + Ord + PartialEq + PartialOrd> PartialOrd for IntervalLimit<
   }
 }
 
-impl<T: Clone + Eq + Ord + PartialEq + PartialOrd> IntervalLimit<T> {
-  pub fn get_closed(&self) -> bool {
+impl<T: Debug + Clone + PartialEq + PartialOrd> IntervalLimit<T> {
+  pub fn is_closed(&self) -> bool {
     self.closed
   }
 
-  pub fn get_lower(&self) -> bool {
+  pub fn is_lower(&self) -> bool {
     self.lower
   }
 
@@ -111,7 +111,7 @@ impl<T: Clone + Eq + Ord + PartialEq + PartialOrd> IntervalLimit<T> {
   }
 }
 
-impl<T: Display + Clone + Eq + Ord + PartialEq + PartialOrd> Display for IntervalLimit<T> {
+impl<T: Debug + Display + Clone + PartialEq + PartialOrd> Display for IntervalLimit<T> {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     write!(
       f,
@@ -338,7 +338,7 @@ mod tests {
 
     let mut rng = rand::thread_rng();
     list.shuffle(&mut rng);
-    list.sort();
+    list.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     assert_eq!(
       list.get(0).unwrap(),
