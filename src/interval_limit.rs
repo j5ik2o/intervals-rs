@@ -96,10 +96,7 @@ impl<T: Debug + Clone + PartialEq + PartialOrd> IntervalLimit<T> {
   }
 
   pub fn infinity(&self) -> bool {
-    match self.value {
-      LimitValue::Limitless => true,
-      _ => false,
-    }
+    matches!(self.value, LimitValue::Limitless)
   }
 
   pub fn is_open(&self) -> bool {
