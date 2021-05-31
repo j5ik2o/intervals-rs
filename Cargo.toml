@@ -1,6 +1,6 @@
 [package]
 name = "intervals-rs"
-version = "0.1.0"
+version = "0.0.1"
 description = "A Rust crate for intervals"
 authors = ["Junichi Kato <j5ik2o@gmail.com>"]
 edition = "2018"
