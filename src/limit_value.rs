@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter, Debug};
 use crate::Error;
 use std::hash::{Hash, Hasher};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, Ord)]
 pub enum LimitValue<T> {
   Limit(T),
   Limitless,
