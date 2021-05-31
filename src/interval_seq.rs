@@ -114,14 +114,23 @@ pub struct IntervalSeq<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq 
 }
 
 impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> IntervalSeq<T> {
+  /// Add the `Interval` element to this `IntervalSeq`.
+  ///
+  /// - value: `Interval`
   pub fn append(&mut self, value: &Interval<T>) {
     self.intervals.push(value.clone());
   }
 
+  /// Returns whether the intervals elements are empty.
+  ///
+  /// return: true if the intervals elements are empty
   pub fn is_empty(&self) -> bool {
     self.intervals.is_empty()
   }
 
+  /// Creates empty IntervalSeq.
+  ///
+  /// - return: `IntervalSeq`
   pub fn empty() -> Self {
     let intervals: Vec<Interval<T>> = vec![];
     Self::new(&intervals)
@@ -141,10 +150,10 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
-  /// 全ての要素区間を内包する、最小の区間を返す。
+  /// Returns the smallest interval that encompasses all the element intervals.
   ///
-  /// return 全ての要素区間を内包する、最小の区間
-  /// throws IllegalStateException 要素が1つもない場合
+  /// - return: the smallest interval that encompasses all the elemental intervals.
+  /// - panic: if none of the elements are present
   pub fn extent(&self) -> Interval<T> {
     if self.intervals.is_empty() {
       panic!("")
@@ -176,12 +185,13 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
-  /// ソート済みの区間で、隣り合った区間同士に挟まれる区間を区間列として返す。
+  /// In the sorted intervals, return the intervals that are between adjacent intervals as the interval sequence.
   ///
-  /// 区間数が2つ未満の場合は、空の区間列を返す。また、区間同士が重なっていたり接していた場合は、
-  /// その区間は結果の要素に含まない。全てが重なっている場合は、空の区間列を返す。
+  /// If the number of intervals is less than two, an empty sequence of intervals is returned.
+  /// If the intervals overlap or touch each other, the intervals are not included in the result element.
+  /// If all the intervals overlap, an empty interval sequence is returned.
   ///
-  /// @return ギャップ区間列
+  /// - return: gap section sequence
   pub fn gap(&self) -> Self {
     if self.intervals.len() < 2 {
       let values: Vec<Interval<T>> = vec![];
@@ -200,12 +210,13 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
-  /// ソート済みの区間で、隣り合った区間同士が重なっている区間を区間列として返す。
+  /// Returns the sorted intervals where adjacent intervals overlap each other as an interval sequence.
   ///
-  /// 区間数が2つ未満の場合は、空の区間列を返す。また、区間同士が重ならなかったり接していた場合は、
-  /// その区間は結果の要素に含まない。全てが重ならない場合は、空の区間列を返す。
+  /// If the number of intervals is less than two, an empty sequence of intervals is returned.
+  /// If the intervals do not overlap or are tangent to each other, the intervals are not included in the result element.
+  /// If all the intervals do not overlap, an empty interval sequence is returned.
   ///
-  /// @return 共通区間列
+  /// - return: common section sequence
   pub fn intersections(&self) -> Self {
     if self.intervals.len() < 2 {
       let values: Vec<Interval<T>> = vec![];
