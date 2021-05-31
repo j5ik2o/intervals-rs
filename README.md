@@ -17,6 +17,22 @@ Add this to your `Cargo.toml`:
 intervals-rs = "<<version>>"
 ```
 
+## Usage
+
+```rust
+let range = Interval::closed(
+  LimitValue::Limit(Decimal::from_f32(-5.5).unwrap()),
+  LimitValue::Limit(Decimal::from_f32(6.6).unwrap()),
+);
+assert!(range.includes(&LimitValue::Limit(Decimal::from_f32(5.0).unwrap())));
+assert!(range.includes(&LimitValue::Limit(Decimal::from_f32(-5.5).unwrap())));
+assert!(range.includes(&LimitValue::Limit(Decimal::from_f32(-5.4999).unwrap())));
+assert!(range.includes(&LimitValue::Limit(Decimal::from_f32(6.6).unwrap())));
+assert!(!range.includes(&LimitValue::Limit(Decimal::from_f32(6.601).unwrap())));
+assert!(!range.includes(&LimitValue::Limit(Decimal::from_f32(-5.501).unwrap())));
+```
+
+
 
 ## License
 
