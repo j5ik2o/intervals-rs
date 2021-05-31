@@ -11,6 +11,9 @@ mod interval_test;
 #[cfg(test)]
 mod limit_value_test;
 
+mod interval_seq;
+
 pub use crate::errors::Error;
 pub use crate::limit_value::LimitValue;
+pub use crate::interval_limit::IntervalLimit;
 pub use crate::interval::Interval;

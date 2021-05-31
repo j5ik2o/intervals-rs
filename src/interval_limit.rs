@@ -4,20 +4,22 @@ use std::fmt::{Display, Formatter, Debug};
 use crate::LimitValue;
 use std::hash::Hash;
 
-#[derive(Debug, Clone, Hash)]
-pub struct IntervalLimit<T: Display> {
+#[derive(Debug, Clone, Hash, Eq, Ord)]
+pub struct IntervalLimit<T: Display + Clone + Hash + Ord> {
   closed: bool,
   lower: bool,
   value: LimitValue<T>,
 }
 
-impl<T: Display + Clone + Hash + PartialEq + PartialOrd> PartialEq for IntervalLimit<T> {
+impl<T: Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> PartialEq for IntervalLimit<T> {
   fn eq(&self, other: &Self) -> bool {
     self.partial_cmp(other) == Some(Ordering::Equal)
   }
 }
 
-impl<T: Display + Clone + Hash + PartialEq + PartialOrd> PartialOrd for IntervalLimit<T> {
+impl<T: Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> PartialOrd
+  for IntervalLimit<T>
+{
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
     if self.value.is_limitless() && other.value.is_limitless() {
       if self.lower == other.lower {
@@ -51,7 +53,7 @@ impl<T: Display + Clone + Hash + PartialEq + PartialOrd> PartialOrd for Interval
   }
 }
 
-impl<T: Display + Clone + PartialEq + PartialOrd> IntervalLimit<T> {
+impl<T: Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> IntervalLimit<T> {
   pub fn is_closed(&self) -> bool {
     self.closed
   }
@@ -113,7 +115,7 @@ impl<T: Display + Clone + PartialEq + PartialOrd> IntervalLimit<T> {
   }
 }
 
-impl<T: Display + Clone + PartialEq + PartialOrd> Display for IntervalLimit<T> {
+impl<T: Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Display for IntervalLimit<T> {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     write!(
       f,

@@ -5,20 +5,15 @@ use std::hash::{Hash, Hasher};
 use crate::interval_limit::IntervalLimit;
 use crate::LimitValue;
 
-#[derive(Debug, Clone)]
-pub struct Interval<T: Debug + Display + Clone + Hash + PartialEq + PartialOrd> {
-  lower: IntervalLimit<T>,
-  upper: IntervalLimit<T>,
+#[derive(Debug, Clone, Hash, Eq)]
+pub struct Interval<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> {
+  pub(crate) lower: IntervalLimit<T>,
+  pub(crate) upper: IntervalLimit<T>,
 }
 
-impl<T: Debug + Display + Clone + Hash + PartialEq + PartialOrd> Hash for Interval<T> {
-  fn hash<H: Hasher>(&self, state: &mut H) {
-    self.lower.hash(state);
-    self.upper.hash(state);
-  }
-}
-
-impl<T: Debug + Display + Clone + Hash + PartialEq + PartialOrd> PartialEq for Interval<T> {
+impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> PartialEq
+  for Interval<T>
+{
   fn eq(&self, other: &Self) -> bool {
     if self.is_empty() & other.is_empty() {
       true
@@ -34,7 +29,7 @@ impl<T: Debug + Display + Clone + Hash + PartialEq + PartialOrd> PartialEq for I
   }
 }
 
-impl<T: Debug + Display + Clone + Hash + PartialEq + PartialOrd> Interval<T> {
+impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Interval<T> {
   pub fn and_more(lower: LimitValue<T>) -> Self {
     Self::closed(lower, LimitValue::<T>::Limitless)
   }
@@ -222,19 +217,18 @@ impl<T: Debug + Display + Clone + Hash + PartialEq + PartialOrd> Interval<T> {
   pub fn intersects(&self, other: &Interval<T>) -> bool {
     if self.equal_both_limitless(&self.upper_limit(), &other.upper_limit()) {
       true
-    } else if self.equal_both_limitless(&self.lower_limit(), &self.upper_limit()) {
+    } else if self.equal_both_limitless(&self.lower_limit(), &self.lower_limit()) {
       true
     } else {
-      match self
-        .greater_of_lower_limits(other)
-        .partial_cmp(&self.lesser_of_upper_limits(other))
-      {
-        Some(Ordering::Less) => true,
-        Some(Ordering::Greater) => false,
-        _ => {
-          self.greater_of_lower_included_in_intersection(other)
-            && self.lesser_of_upper_included_in_intersection(other)
-        }
+      let g = self.greater_of_lower_limits(other);
+      let l = self.lesser_of_upper_limits(other);
+      if g < l {
+        true
+      } else if g > l {
+        false
+      } else {
+        self.greater_of_lower_included_in_intersection(other)
+          && self.lesser_of_upper_included_in_intersection(other)
       }
     }
   }
@@ -355,7 +349,9 @@ impl<T: Debug + Display + Clone + Hash + PartialEq + PartialOrd> Interval<T> {
   }
 }
 
-impl<T: Debug + Display + Clone + Hash + PartialEq + PartialOrd> Display for Interval<T> {
+impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Display
+  for Interval<T>
+{
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     if self.is_empty() {
       write!(f, "{{}}")
