@@ -36,12 +36,18 @@ impl<T: Debug + PartialOrd> PartialOrd for LimitValue<T> {
   }
 }
 
-impl<T: Debug> LimitValue<T> {
-  pub fn from_limit_value(value: Option<T>) -> Self {
+impl<T: Debug> From<Option<T>> for LimitValue<T> {
+  fn from(value: Option<T>) -> Self {
     match value {
       None => LimitValue::Limitless,
       Some(v) => LimitValue::Limit(v),
     }
+  }
+}
+
+impl<T: Debug> LimitValue<T> {
+  pub fn is_limit(&self) -> bool {
+    matches!(self, LimitValue::Limit(_))
   }
 
   pub fn is_limitless(&self) -> bool {
