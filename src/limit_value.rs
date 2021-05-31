@@ -10,12 +10,12 @@ pub enum LimitValue<T> {
   Limitless,
 }
 
-impl<T: Display> Hash for LimitValue<T> {
+impl<T: ToString> Hash for LimitValue<T> {
   fn hash<H: Hasher>(&self, state: &mut H) {
     match self {
       LimitValue::Limit(value) => {
         "Limit".hash(state);
-        format!("{}", value).hash(state)
+        value.to_string().hash(state)
       }
       LimitValue::Limitless => {
         "Limitless".hash(state);
@@ -51,7 +51,7 @@ impl<T: PartialOrd> PartialOrd for LimitValue<T> {
   }
 }
 
-impl<T: Hash> From<Option<T>> for LimitValue<T> {
+impl<T> From<Option<T>> for LimitValue<T> {
   fn from(value: Option<T>) -> Self {
     match value {
       None => LimitValue::Limitless,
