@@ -2,21 +2,22 @@ use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Debug};
 
 use crate::LimitValue;
+use std::hash::Hash;
 
-#[derive(Debug, Clone)]
-pub struct IntervalLimit<T: Debug + Clone + PartialOrd + PartialEq> {
+#[derive(Debug, Clone, Hash)]
+pub struct IntervalLimit<T: Display> {
   closed: bool,
   lower: bool,
   value: LimitValue<T>,
 }
 
-impl<T: Debug + Clone + PartialEq + PartialOrd> PartialEq for IntervalLimit<T> {
+impl<T: Display + Clone + Hash + PartialEq + PartialOrd> PartialEq for IntervalLimit<T> {
   fn eq(&self, other: &Self) -> bool {
     self.partial_cmp(other) == Some(Ordering::Equal)
   }
 }
 
-impl<T: Debug + Clone + PartialEq + PartialOrd> PartialOrd for IntervalLimit<T> {
+impl<T: Display + Clone + Hash + PartialEq + PartialOrd> PartialOrd for IntervalLimit<T> {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
     if self.value.is_limitless() && other.value.is_limitless() {
       if self.lower == other.lower {
@@ -50,7 +51,7 @@ impl<T: Debug + Clone + PartialEq + PartialOrd> PartialOrd for IntervalLimit<T> 
   }
 }
 
-impl<T: Debug + Clone + PartialEq + PartialOrd> IntervalLimit<T> {
+impl<T: Display + Clone + PartialEq + PartialOrd> IntervalLimit<T> {
   pub fn is_closed(&self) -> bool {
     self.closed
   }
@@ -95,8 +96,12 @@ impl<T: Debug + Clone + PartialEq + PartialOrd> IntervalLimit<T> {
     }
   }
 
-  pub fn infinity(&self) -> bool {
-    matches!(self.value, LimitValue::Limitless)
+  pub fn is_infinity(&self) -> bool {
+    self.value.is_limitless()
+  }
+
+  pub fn non_infinity(&self) -> bool {
+    self.value.is_limit()
   }
 
   pub fn is_open(&self) -> bool {
@@ -108,7 +113,7 @@ impl<T: Debug + Clone + PartialEq + PartialOrd> IntervalLimit<T> {
   }
 }
 
-impl<T: Debug + Display + Clone + PartialEq + PartialOrd> Display for IntervalLimit<T> {
+impl<T: Display + Clone + PartialEq + PartialOrd> Display for IntervalLimit<T> {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     write!(
       f,
@@ -117,4 +122,3 @@ impl<T: Debug + Display + Clone + PartialEq + PartialOrd> Display for IntervalLi
     )
   }
 }
-

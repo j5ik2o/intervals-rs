@@ -2,20 +2,35 @@ use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Debug};
 
 use crate::Error;
+use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]
-pub enum LimitValue<T: Debug> {
+pub enum LimitValue<T> {
   Limit(T),
   Limitless,
 }
 
-impl<T: Debug + Clone + Default> Default for LimitValue<T> {
-  fn default() -> Self {
-    LimitValue::Limitless
+impl<T: Display> Hash for LimitValue<T> {
+  fn hash<H: Hasher>(&self, state: &mut H) {
+    match self {
+      LimitValue::Limit(value) => {
+        "Limit".hash(state);
+        format!("{}", value).hash(state)
+      }
+      LimitValue::Limitless => {
+        "Limitless".hash(state);
+      }
+    }
   }
 }
 
-impl<T: Debug + PartialEq> PartialEq for LimitValue<T> {
+impl<T: Default> Default for LimitValue<T> {
+  fn default() -> Self {
+    LimitValue::Limit(T::default())
+  }
+}
+
+impl<T: PartialEq> PartialEq for LimitValue<T> {
   fn eq(&self, other: &Self) -> bool {
     match (self, other) {
       (LimitValue::Limitless, LimitValue::Limitless) => true,
@@ -25,7 +40,7 @@ impl<T: Debug + PartialEq> PartialEq for LimitValue<T> {
   }
 }
 
-impl<T: Debug + PartialOrd> PartialOrd for LimitValue<T> {
+impl<T: PartialOrd> PartialOrd for LimitValue<T> {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
     match (self, other) {
       (LimitValue::Limitless, LimitValue::Limitless) => Some(Ordering::Equal),
@@ -36,7 +51,7 @@ impl<T: Debug + PartialOrd> PartialOrd for LimitValue<T> {
   }
 }
 
-impl<T: Debug> From<Option<T>> for LimitValue<T> {
+impl<T: Hash> From<Option<T>> for LimitValue<T> {
   fn from(value: Option<T>) -> Self {
     match value {
       None => LimitValue::Limitless,
@@ -45,7 +60,7 @@ impl<T: Debug> From<Option<T>> for LimitValue<T> {
   }
 }
 
-impl<T: Debug> LimitValue<T> {
+impl<T> LimitValue<T> {
   pub fn is_limit(&self) -> bool {
     matches!(self, LimitValue::Limit(_))
   }
@@ -72,7 +87,7 @@ impl<T: Debug> LimitValue<T> {
   }
 }
 
-impl<T: Display + Debug> Display for LimitValue<T> {
+impl<T: Display> Display for LimitValue<T> {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     match self {
       LimitValue::Limit(a) => write!(f, "Limit({})", a),

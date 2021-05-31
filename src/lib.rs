@@ -5,9 +5,9 @@ mod interval_limit;
 mod limit_value;
 
 #[cfg(test)]
-mod interval_test;
-#[cfg(test)]
 mod interval_limit_test;
+#[cfg(test)]
+mod interval_test;
 #[cfg(test)]
 mod limit_value_test;
 

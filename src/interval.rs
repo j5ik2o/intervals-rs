@@ -1,16 +1,24 @@
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
+use std::hash::{Hash, Hasher};
 
 use crate::interval_limit::IntervalLimit;
 use crate::LimitValue;
 
 #[derive(Debug, Clone)]
-pub struct Interval<T: Debug + Display + Clone + PartialEq + PartialOrd> {
+pub struct Interval<T: Debug + Display + Clone + Hash + PartialEq + PartialOrd> {
   lower: IntervalLimit<T>,
   upper: IntervalLimit<T>,
 }
 
-impl<T: Debug + Display + Clone + PartialEq + PartialOrd> PartialEq for Interval<T> {
+impl<T: Debug + Display + Clone + Hash + PartialEq + PartialOrd> Hash for Interval<T> {
+  fn hash<H: Hasher>(&self, state: &mut H) {
+    self.lower.hash(state);
+    self.upper.hash(state);
+  }
+}
+
+impl<T: Debug + Display + Clone + Hash + PartialEq + PartialOrd> PartialEq for Interval<T> {
   fn eq(&self, other: &Self) -> bool {
     if self.is_empty() & other.is_empty() {
       true
@@ -26,7 +34,7 @@ impl<T: Debug + Display + Clone + PartialEq + PartialOrd> PartialEq for Interval
   }
 }
 
-impl<T: Debug + Display + Clone + PartialEq + PartialOrd> Interval<T> {
+impl<T: Debug + Display + Clone + Hash + PartialEq + PartialOrd> Interval<T> {
   pub fn and_more(lower: LimitValue<T>) -> Self {
     Self::closed(lower, LimitValue::<T>::Limitless)
   }
@@ -86,6 +94,19 @@ impl<T: Debug + Display + Clone + PartialEq + PartialOrd> Interval<T> {
     let upper_pass = self.includes(other.upper_limit())
       || self.upper_limit() == other.upper_limit() && !other.includes_upper_limit();
     lower_pass && upper_pass
+  }
+
+  pub fn gap(&self, other: &Interval<T>) -> Interval<T> {
+    if self.intersects(other) {
+      self.empty_of_same_type()
+    } else {
+      self.new_of_same_type(
+        self.lesser_of_upper_limits(other).clone(),
+        !self.lesser_of_upper_included_in_union(other),
+        self.greater_of_lower_limits(other).clone(),
+        !self.greater_of_lower_included_in_union(other),
+      )
+    }
   }
 
   pub fn is_single_element(&self) -> bool {
@@ -156,8 +177,8 @@ impl<T: Debug + Display + Clone + PartialEq + PartialOrd> Interval<T> {
     Self::check_lower_is_less_than_or_equal_upper(&lower, &upper);
     let mut l = lower.clone();
     let mut u = upper.clone();
-    if !upper.infinity()
-      && !lower.infinity()
+    if !upper.is_infinity()
+      && !lower.is_infinity()
       && upper.get_value() == lower.get_value()
       && (lower.is_open() ^ upper.is_open())
     {
@@ -307,7 +328,7 @@ impl<T: Debug + Display + Clone + PartialEq + PartialOrd> Interval<T> {
   /// return この区間の下側の補区間と、与えた区間の共通部分。存在しない場合は `None`
   pub fn left_complement_relative_to(&self, other: &Interval<T>) -> Option<Interval<T>> {
     // この区間の下側限界値の方が小さいか等しい場合、下側の補区間に共通部分は無い
-    if self.lower_limit().partial_cmp(other.lower_limit()) == Some(Ordering::Less) {
+    if self.lower <= other.lower {
       None
     } else {
       Some(self.new_of_same_type(
@@ -321,7 +342,7 @@ impl<T: Debug + Display + Clone + PartialEq + PartialOrd> Interval<T> {
 
   pub fn right_complement_relative_to(&self, other: &Interval<T>) -> Option<Interval<T>> {
     // この区間の上側限界値の方が大きいか等しい場合、上側の補区間に共通部分は無い
-    if self.upper_limit().partial_cmp(other.upper_limit()) == Some(Ordering::Greater) {
+    if self.upper >= other.upper {
       None
     } else {
       Some(self.new_of_same_type(
@@ -334,12 +355,12 @@ impl<T: Debug + Display + Clone + PartialEq + PartialOrd> Interval<T> {
   }
 }
 
-impl<T: Debug + Display + Clone + Eq + Ord + PartialEq + PartialOrd> Display for Interval<T> {
+impl<T: Debug + Display + Clone + Hash + PartialEq + PartialOrd> Display for Interval<T> {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     if self.is_empty() {
-      write!(f, "()")
+      write!(f, "{{}}")
     } else if self.is_single_element() {
-      write!(f, "({})", self.lower_limit().to_string())
+      write!(f, "{{{}}}", self.lower_limit().to_string())
     } else {
       let mut str = String::new();
       if self.includes_lower_limit() {
@@ -363,8 +384,7 @@ impl<T: Debug + Display + Clone + Eq + Ord + PartialEq + PartialOrd> Display for
       } else {
         str.push(')');
       }
-      write!(f, "({})", str)
+      write!(f, "{}", str)
     }
   }
 }
-
