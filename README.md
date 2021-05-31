@@ -1,5 +1,7 @@
 # intervals-rs
 
+A Rust crate for intervals.
+
 [![Workflow Status](https://github.com/j5ik2o/intervals-rs/workflows/Rust/badge.svg)](https://github.com/j5ik2o/intervals-rs/actions?query=workflow%3A%22Rust%22)
 [![crates.io](https://img.shields.io/crates/v/intervals-rs.svg)](https://crates.io/crates/intervals-rs)
 [![docs.rs](https://docs.rs/intervals-rs/badge.svg)](https://docs.rs/intervals-rs)

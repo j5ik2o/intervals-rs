@@ -1,5 +1,7 @@
 # {{crate}}
 
+A Rust crate for intervals.
+
 {{badges}}
 [![crates.io](https://img.shields.io/crates/v/intervals-rs.svg)](https://crates.io/crates/intervals-rs)
 [![docs.rs](https://docs.rs/intervals-rs/badge.svg)](https://docs.rs/intervals-rs)
