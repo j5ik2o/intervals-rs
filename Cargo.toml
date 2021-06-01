@@ -14,7 +14,7 @@ repository = "https://github.com/j5ik2o/intervals-rs"
 github = { repository = "j5ik2o/intervals-rs", workflow = "Rust" }
 
 [dependencies]
-rand = "0.6.5"
+rand = "0.8.3"
 
 [dev-dependencies]
 rust_decimal = "1.8.1"
