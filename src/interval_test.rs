@@ -83,7 +83,7 @@ fn test07_below() {
 
 #[test]
 fn test08_includes() {
-  let range = Interval::closed(
+  let range: Interval<Decimal> = Interval::closed(
     LimitValue::Limit(Decimal::from_f32(-5.5).unwrap()),
     LimitValue::Limit(Decimal::from_f32(6.6).unwrap()),
   );
@@ -97,18 +97,18 @@ fn test08_includes() {
 
 #[test]
 fn test09_open_interval() {
-  let ex_range = Interval::over(
+  let range: Interval<Decimal> = Interval::over(
     LimitValue::Limit(Decimal::from_f32(-5.5).unwrap()),
     false,
     LimitValue::Limit(Decimal::from_f32(6.6).unwrap()),
     true,
   );
-  assert!(ex_range.includes(&LimitValue::Limit(Decimal::from_f32(5.0).unwrap())));
-  assert!(!ex_range.includes(&LimitValue::Limit(Decimal::from_f32(-5.5).unwrap())));
-  assert!(ex_range.includes(&LimitValue::Limit(Decimal::from_f32(-5.4999).unwrap())));
-  assert!(ex_range.includes(&LimitValue::Limit(Decimal::from_f32(6.6).unwrap())));
-  assert!(!ex_range.includes(&LimitValue::Limit(Decimal::from_f32(6.601).unwrap())));
-  assert!(!ex_range.includes(&LimitValue::Limit(Decimal::from_f32(-5.501).unwrap())));
+  assert!(range.includes(&LimitValue::Limit(Decimal::from_f32(5.0).unwrap())));
+  assert!(!range.includes(&LimitValue::Limit(Decimal::from_f32(-5.5).unwrap())));
+  assert!(range.includes(&LimitValue::Limit(Decimal::from_f32(-5.4999).unwrap())));
+  assert!(range.includes(&LimitValue::Limit(Decimal::from_f32(6.6).unwrap())));
+  assert!(!range.includes(&LimitValue::Limit(Decimal::from_f32(6.601).unwrap())));
+  assert!(!range.includes(&LimitValue::Limit(Decimal::from_f32(-5.501).unwrap())));
 }
 
 #[test]

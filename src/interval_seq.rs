@@ -191,7 +191,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
   /// If the intervals overlap or touch each other, the intervals are not included in the result element.
   /// If all the intervals overlap, an empty interval sequence is returned.
   ///
-  /// - return: gap section sequence
+  /// - return: gap interval sequence
   pub fn gap(&self) -> Self {
     if self.intervals.len() < 2 {
       let values: Vec<Interval<T>> = vec![];
@@ -216,7 +216,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
   /// If the intervals do not overlap or are tangent to each other, the intervals are not included in the result element.
   /// If all the intervals do not overlap, an empty interval sequence is returned.
   ///
-  /// - return: common section sequence
+  /// - return: common interval sequence
   pub fn intersections(&self) -> Self {
     if self.intervals.len() < 2 {
       let values: Vec<Interval<T>> = vec![];

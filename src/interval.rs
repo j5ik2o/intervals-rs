@@ -14,6 +14,15 @@ pub struct Interval<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + P
 impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> PartialEq
   for Interval<T>
 {
+  /// Verify the identity of this interval and the given interval `other`.
+  ///
+  /// It returns `true` if both intervals are empty, and `false` if only one of them is empty.
+  /// If both are single-element intervals, the limits that are single elements are compared with each other, and `true` is returned if they match.
+  /// If only one of them is a single-element interval, `false` is returned.
+  ///
+  /// - param
+  ///   - other: an interval to be compared
+  /// - return: `true` if they are identical, `false` if they are not
   fn eq(&self, other: &Self) -> bool {
     if self.is_empty() & other.is_empty() {
       true
@@ -83,6 +92,11 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
+  /// Verify that this interval completely encloses the specified interval `other`.
+  ///
+  /// - params
+  ///     - other: an `Interval`
+  /// - return: `true` for full comprehension, `false` otherwise
   pub fn covers(&self, other: &Interval<T>) -> bool {
     let lower_pass = self.includes(other.lower_limit())
       || self.lower_limit() == other.lower_limit() && !other.includes_lower_limit();
@@ -91,6 +105,14 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     lower_pass && upper_pass
   }
 
+  /// Get the interval that lies between this interval and the given interval `other`.
+  ///
+  /// For example, the gap between [3, 5) and [10, 20) is [5, 19).
+  /// If the two intervals have a common part, return an empty interval.
+  ///
+  /// - params
+  ///     - other: an interval to be compared
+  /// - return: gap interval
   pub fn gap(&self, other: &Interval<T>) -> Interval<T> {
     if self.intersects(other) {
       self.empty_of_same_type()
@@ -104,6 +126,12 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
+  /// Verify whether this interval is a single-element interval or not.
+  ///
+  /// A single-element interval has both upper and lower limits, and also indicates that these limits are equal and not an open interval.
+  /// For example, `3 <= x < 3`, `3 <= x <= 3`, and `3 <= x <= 3`.
+  ///
+  /// - return: `true` if it's a single element interval, `false` otherwise
   pub fn is_single_element(&self) -> bool {
     if !self.has_upper_limit() {
       false
@@ -133,10 +161,20 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     Self::new_with(lower, lower_closed, upper, upper_closed)
   }
 
+  /// Verify whether or not the specified value `value` is included in this interval.
+  ///
+  /// - params
+  ///     - value: an interval value
+  /// - return: `true` if included, `false` otherwise
   pub fn includes(&self, value: &LimitValue<T>) -> bool {
     !self.is_below(value) && !self.is_above(value)
   }
 
+  /// Verify that the specified value `value` does not exceed the upper limit of this interval.
+  ///
+  /// - params
+  ///     - value: an interval value
+  /// - return: `true` if not exceeded, `false` otherwise
   pub fn is_below(&self, value: &LimitValue<T>) -> bool {
     if !self.has_upper_limit() {
       false
@@ -145,6 +183,11 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
+  /// Verify that the specified value `value` does not exceed the lower limit of this interval.
+  ///
+  /// - params
+  ///     - value: an interval value
+  /// - return: `true` if not exceeded, `false` otherwise
   pub fn is_above(&self, value: &LimitValue<T>) -> bool {
     if !self.has_lower_limit() {
       false
@@ -153,14 +196,26 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
+  /// Verify whether this interval is an open interval or not.
+  ///
+  /// - return: `true` if it's an open interval, `false` otherwise (including half-open interval)
   pub fn is_open(&self) -> bool {
     !self.includes_lower_limit() && !self.includes_upper_limit()
   }
 
+  /// Verify whether this interval is a closed interval or not.
+  ///
+  /// - return: `true` if it's a closed interval, `false` otherwise (including half-open interval)
   pub fn is_closed(&self) -> bool {
     self.includes_upper_limit() && self.includes_lower_limit()
   }
 
+  /// Verify whether this interval is empty or not.
+  ///
+  /// The interval is empty means that the upper and lower limits are the same value and the interval is open.
+  /// For example, a state like `3 < x < 3`.
+  ///
+  /// - return: `true` if it's empty, `false` otherwise.
   pub fn is_empty(&self) -> bool {
     match (self.upper_limit(), self.lower_limit()) {
       (&LimitValue::Limitless, &LimitValue::Limitless) => false,
@@ -199,6 +254,12 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     )
   }
 
+  /// Return the product set (common part) of this interval and the given interval `other`.
+  ///
+  /// If the common part does not exist, it returns an empty interval.
+  ///
+  /// - params
+  ///     - other: an interval to be compared
   pub fn intersect(&self, other: &Interval<T>) -> Interval<T> {
     let intersect_lower_bound = self.greater_of_lower_limits(other);
     let intersect_upper_bound = self.lesser_of_upper_limits(other);
@@ -214,6 +275,11 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
+  /// Verify if there is a common part between this interval and the given interval `other`.
+  ///
+  /// - params
+  ///     - other: a target interval
+  /// - return: `true` if the common part exists, `false` otherwise
   pub fn intersects(&self, other: &Interval<T>) -> bool {
     if self.equal_both_limitless(&self.upper_limit(), &other.upper_limit()) {
       true
@@ -240,6 +306,17 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     self.lower.get_value()
   }
 
+  /// Get whether there is an upper limit or not.
+  ///
+  /// Warning: This method is generally used for the purpose of displaying this value and for interaction with classes that are highly coupled to this class.
+  /// Careless use of this method will unnecessarily increase the coupling between this class and the client-side class.
+  ///
+  /// If you want to use this value for calculations,
+  /// - find another appropriate method or add a new method to this class.
+  /// - find another suitable method or consider adding a new method to this class.
+  ///
+  ///
+  /// - return: `true` if upper limit is present, `false` otherwise
   pub fn has_upper_limit(&self) -> bool {
     match self.upper_limit() {
       LimitValue::Limit(_) => true,
@@ -247,6 +324,17 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
+  /// Get whether there is an lower limit or not.
+  ///
+  /// Warning: This method is generally used for the purpose of displaying this value and for interaction with classes that are highly coupled to this class.
+  /// Careless use of this method will unnecessarily increase the coupling between this class and the client-side class.
+  ///
+  /// If you want to use this value for calculations,
+  /// - find another appropriate method or add a new method to this class.
+  /// - find another suitable method or consider adding a new method to this class.
+  ///
+  ///
+  /// - return: `true` if lower limit is present, `false` otherwise
   pub fn has_lower_limit(&self) -> bool {
     match self.lower_limit() {
       LimitValue::Limit(_) => true,
@@ -254,6 +342,16 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
+  /// Get whether the upper limit is closed or not.
+  ///
+  /// Warning: This method is generally used for the purpose of displaying this value and for interaction with classes that are highly coupled to this class.
+  /// Careless use of this method will unnecessarily increase the coupling between this class and the client-side class.
+  ///
+  /// If you want to use this value for calculations,
+  /// - find another appropriate method or add a new method to this class.
+  /// - find another suitable method or consider adding a new method to this class.
+  ///
+  /// - return: true` if the upper limit is closed, `false` otherwise
   pub fn includes_upper_limit(&self) -> bool {
     self.upper.is_closed()
   }
@@ -316,7 +414,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     self.includes(&limit) || other.includes(&limit)
   }
 
-  /// この区間の下側<b>補</b>区間と与えた区間 `other` の共通部分を返す。
+  /// この区間の下側補区間と与えた区間 `other` の共通部分を返す。
   ///
   /// other 比較対象の区間
   /// return この区間の下側の補区間と、与えた区間の共通部分。存在しない場合は `None`
