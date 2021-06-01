@@ -38,7 +38,6 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Part
 }
 
 impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Interval<T> {
-
   /// Generate an interval.
   ///
   /// - params
@@ -50,9 +49,9 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     let mut l = lower.clone();
     let mut u = upper.clone();
     if !upper.is_infinity()
-        && !lower.is_infinity()
-        && upper.as_value() == lower.as_value()
-        && (lower.is_open() ^ upper.is_open())
+      && !lower.is_infinity()
+      && upper.as_value() == lower.as_value()
+      && (lower.is_open() ^ upper.is_open())
     {
       if lower.is_open() {
         l = IntervalLimit::lower(true, lower.as_value().clone());

@@ -17,8 +17,6 @@ pub enum Ordered {
   },
 }
 
-
-
 impl Ordered {
   fn lower_factor(&self) -> i8 {
     match self {

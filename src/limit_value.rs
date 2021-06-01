@@ -4,9 +4,12 @@ use std::fmt::{Display, Formatter, Debug};
 use crate::Error;
 use std::hash::{Hash, Hasher};
 
+/// A structure that represents a limit value.
 #[derive(Debug, Clone, Eq, Ord)]
 pub enum LimitValue<T> {
+  /// finite limit value
   Limit(T),
+  /// infinite limit value
   Limitless,
 }
 
@@ -61,22 +64,26 @@ impl<T> From<Option<T>> for LimitValue<T> {
 }
 
 impl<T> LimitValue<T> {
+  /// Verify if this limit is finite.
   pub fn is_limit(&self) -> bool {
     matches!(self, LimitValue::Limit(_))
   }
 
+  /// Verify if this limit is infinite.
   pub fn is_limitless(&self) -> bool {
     matches!(self, LimitValue::Limitless)
   }
 
-  pub fn to_value(&self) -> Result<&T, Error> {
+  /// Get the limit value.
+  pub fn as_value(&self) -> Result<&T, Error> {
     match self {
       LimitValue::Limit(a) => Ok(a),
       LimitValue::Limitless => Err(Error::NotFoundError),
     }
   }
 
-  pub fn to_value_or<'a, TF>(&'a self, default: TF) -> &T
+  /// Get the limit value.
+  pub fn as_value_or<'a, TF>(&'a self, default: TF) -> &T
   where
     TF: Fn() -> &'a T,
   {
