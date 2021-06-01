@@ -60,10 +60,10 @@ fn test05_and_more() {
 
 #[test]
 fn test06_abstract_creation() {
-  let concrete = Interval::new_with(LimitValue::Limit(1), true, LimitValue::Limit(3), true);
+  let concrete = Interval::over(LimitValue::Limit(1), true, LimitValue::Limit(3), true);
   let new_interval =
     concrete.new_of_same_type(LimitValue::Limit(1), false, LimitValue::Limit(4), false);
-  let expected = Interval::new_with(LimitValue::Limit(1), false, LimitValue::Limit(4), false);
+  let expected = Interval::over(LimitValue::Limit(1), false, LimitValue::Limit(4), false);
   assert_eq!(new_interval, expected);
 }
 

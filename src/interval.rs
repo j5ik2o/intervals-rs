@@ -38,57 +38,137 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Part
 }
 
 impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Interval<T> {
-  pub fn and_more(lower: LimitValue<T>) -> Self {
-    Self::closed(lower, LimitValue::<T>::Limitless)
+
+  /// Generate an interval.
+  ///
+  /// - params
+  ///     - lower: lower interval limit
+  ///     - upper: upper interval limit
+  /// - return: an interval
+  pub fn new(lower: IntervalLimit<T>, upper: IntervalLimit<T>) -> Interval<T> {
+    Self::check_lower_is_less_than_or_equal_upper(&lower, &upper);
+    let mut l = lower.clone();
+    let mut u = upper.clone();
+    if !upper.is_infinity()
+        && !lower.is_infinity()
+        && upper.as_value() == lower.as_value()
+        && (lower.is_open() ^ upper.is_open())
+    {
+      if lower.is_open() {
+        l = IntervalLimit::lower(true, lower.as_value().clone());
+      }
+      if upper.is_open() {
+        u = IntervalLimit::upper(true, upper.as_value().clone());
+      }
+    }
+    Self { lower: l, upper: u }
   }
 
-  pub fn closed(lower: LimitValue<T>, upper: LimitValue<T>) -> Self {
-    Self::new_with(lower, true, upper, true)
-  }
-
-  pub fn more_than(lower: LimitValue<T>) -> Self {
-    Self::open(lower, LimitValue::<T>::Limitless)
-  }
-
-  pub fn open(lower: LimitValue<T>, upper: LimitValue<T>) -> Self {
-    Self::new_with(lower, false, upper, false)
-  }
-
+  /// Generate an interval.
+  ///
+  /// Mainly used to generate half-open interval (intervals where only one of the upper and lower limits is open).
+  ///
+  /// - params
+  ///     - lower: lower limit, Limitless means there is no limit.
+  ///     - lower_included: specify `true` if the lower limit is included in the interval (closed lower limit).
+  ///     - upper: upper limit, Limitless means there is no limit.
+  ///     - upper_included: specify `true` if the upper limit is included in the interval (closed upper limit)
+  /// - return: an interval
+  /// - panic
+  ///     - if the lower limit is greater than the upper limit
   pub fn over(
     lower: LimitValue<T>,
     lower_included: bool,
     upper: LimitValue<T>,
     upper_included: bool,
   ) -> Self {
-    Self::new_with(lower, lower_included, upper, upper_included)
+    Self::new(
+      IntervalLimit::lower(lower_included, lower),
+      IntervalLimit::upper(upper_included, upper),
+    )
   }
 
+  /// Generate an interval with only the lower limit.
+  ///
+  /// The lower limit is the interval that is included (closed) in the interval.
+  ///
+  /// - params
+  ///     - lower: lower limit, Limitless means that there is no limit.
+  /// - return: an interval
+  pub fn and_more(lower: LimitValue<T>) -> Self {
+    Self::closed(lower, LimitValue::<T>::Limitless)
+  }
+
+  /// Generate a closed interval.
+  ///
+  /// - params
+  ///     - lower: lower limit, Limitless means there is no limit.
+  ///     - upper: upper limit, Limitless means there is no limit.
+  /// - return: a closed interval
+  /// - panic
+  ///     - if the lower limit is greater than the upper limit
+  pub fn closed(lower: LimitValue<T>, upper: LimitValue<T>) -> Self {
+    Self::over(lower, true, upper, true)
+  }
+
+  /// Generate an interval with only the lower limit.
+  ///
+  /// The lower limit is the interval that is not included in the (open) interval.
+  ///
+  /// - params
+  ///     - lower: lower limit, Limitless means there is no limit.
+  /// - return: an interval
+  pub fn more_than(lower: LimitValue<T>) -> Self {
+    Self::open(lower, LimitValue::<T>::Limitless)
+  }
+
+  /// Generate an open interval.
+  ///
+  /// - params
+  ///     - lower: lower limit, Limitless means there is no limit.
+  ///     - upper: upper limit, Limitless means there is no limit.
+  /// - return: an open interval
+  pub fn open(lower: LimitValue<T>, upper: LimitValue<T>) -> Self {
+    Self::over(lower, false, upper, false)
+  }
+
+  /// Generate a single-element interval.
+  ///
+  /// - params
+  ///     - element: an limit value
+  /// - return: an interval
   pub fn single_element(element: LimitValue<T>) -> Self {
     Self::closed(element.clone(), element)
   }
 
+  /// Generate an interval with only an upper limit.
+  ///
+  /// The upper limit is the interval that is not included in the (open) interval.
+  ///
+  /// - params
+  ///     - upper: upper limit, Limitless means there is no limit.
+  /// - return: an interval
   pub fn under(upper: LimitValue<T>) -> Self {
     Self::open(LimitValue::<T>::Limitless, upper)
   }
 
+  /// Generate an interval with only an upper limit.
+  ///
+  /// The upper limit is the (closed) interval included in the interval.
+  ///
+  /// - params
+  ///     - upper: upper limit, Limitless means there is no limit.
+  /// - return: an interval
   pub fn up_to(upper: LimitValue<T>) -> Self {
     Self::closed(LimitValue::<T>::Limitless, upper)
   }
 
-  pub fn complement_relative_to(&self, other: &Interval<T>) -> Vec<Interval<T>> {
-    let mut interval_sequence: Vec<Interval<T>> = vec![];
-    if !self.intersects(other) {
-      interval_sequence.push(other.clone());
-      interval_sequence
-    } else {
-      if let Some(left) = self.left_complement_relative_to(other) {
-        interval_sequence.push(left.clone());
-      }
-      if let Some(right) = self.right_complement_relative_to(other) {
-        interval_sequence.push(right.clone());
-      }
-      interval_sequence
-    }
+  pub fn as_upper_limit(&self) -> &LimitValue<T> {
+    self.upper.as_value()
+  }
+
+  pub fn as_lower_limit(&self) -> &LimitValue<T> {
+    self.lower.as_value()
   }
 
   /// Verify that this interval completely encloses the specified interval `other`.
@@ -141,6 +221,9 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
+  /// Generate a new open interval with the same limits as this interval.
+  ///
+  /// - return: a new interval
   pub fn empty_of_same_type(&self) -> Interval<T> {
     self.new_of_same_type(
       self.as_lower_limit().clone(),
@@ -150,6 +233,14 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     )
   }
 
+  /// Generate a new interval with the same type as this interval.
+  ///
+  /// - params
+  ///     - lower: lower limit, if there is no limit value, then Limitless.
+  ///     - lower_closed: Specify `true` if the lower limit is included in the interval (closed lower limit).
+  ///     - upper: upper limit, if there is no limit value, then Limitless.
+  ///     - upper_closed: specify `true` if the upper limit is included in the interval (closed upper limit)
+  /// - return: an new interval
   pub fn new_of_same_type(
     &self,
     lower: LimitValue<T>,
@@ -157,7 +248,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     upper: LimitValue<T>,
     upper_closed: bool,
   ) -> Interval<T> {
-    Self::new_with(lower, lower_closed, upper, upper_closed)
+    Self::over(lower, lower_closed, upper, upper_closed)
   }
 
   /// Verify whether or not the specified value `value` is included in this interval.
@@ -224,37 +315,6 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
-  pub fn new(lower: IntervalLimit<T>, upper: IntervalLimit<T>) -> Interval<T> {
-    Self::check_lower_is_less_than_or_equal_upper(&lower, &upper);
-    let mut l = lower.clone();
-    let mut u = upper.clone();
-    if !upper.is_infinity()
-      && !lower.is_infinity()
-      && upper.as_value() == lower.as_value()
-      && (lower.is_open() ^ upper.is_open())
-    {
-      if lower.is_open() {
-        l = IntervalLimit::lower(true, lower.as_value().clone());
-      }
-      if upper.is_open() {
-        u = IntervalLimit::upper(true, upper.as_value().clone());
-      }
-    }
-    Self { lower: l, upper: u }
-  }
-
-  pub fn new_with(
-    lower: LimitValue<T>,
-    is_lower_closed: bool,
-    upper: LimitValue<T>,
-    is_upper_closed: bool,
-  ) -> Interval<T> {
-    Self::new(
-      IntervalLimit::lower(is_lower_closed, lower),
-      IntervalLimit::upper(is_upper_closed, upper),
-    )
-  }
-
   /// Return the product set (common part) of this interval and the given interval `other`.
   ///
   /// If the common part does not exist, it returns an empty interval.
@@ -298,13 +358,6 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
           && self.lesser_of_upper_included_in_intersection(other)
       }
     }
-  }
-
-  pub fn as_upper_limit(&self) -> &LimitValue<T> {
-    self.upper.as_value()
-  }
-  pub fn as_lower_limit(&self) -> &LimitValue<T> {
-    self.lower.as_value()
   }
 
   /// Get whether there is an upper limit or not.
@@ -351,8 +404,34 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     self.upper.is_closed()
   }
 
+  /// Get whether the lower limit is closed or not.
+  ///
+  /// Warning: This method is generally used for the purpose of displaying this value and for interaction with classes that are highly coupled to this class.
+  /// Careless use of this method will unnecessarily increase the coupling between this class and the client-side class.
+  ///
+  /// If you want to use this value for calculations,
+  /// - find another appropriate method or add a new method to this class.
+  /// - find another suitable method or consider adding a new method to this class.
+  ///
+  /// - return: true` if the lower limit is closed, `false` otherwise
   pub fn includes_lower_limit(&self) -> bool {
     self.lower.is_closed()
+  }
+
+  pub(crate) fn complement_relative_to(&self, other: &Interval<T>) -> Vec<Interval<T>> {
+    let mut interval_sequence: Vec<Interval<T>> = vec![];
+    if !self.intersects(other) {
+      interval_sequence.push(other.clone());
+      interval_sequence
+    } else {
+      if let Some(left) = self.left_complement_relative_to(other) {
+        interval_sequence.push(left.clone());
+      }
+      if let Some(right) = self.right_complement_relative_to(other) {
+        interval_sequence.push(right.clone());
+      }
+      interval_sequence
+    }
   }
 
   fn check_lower_is_less_than_or_equal_upper(lower: &IntervalLimit<T>, upper: &IntervalLimit<T>) {
@@ -365,7 +444,12 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     matches!((me, your), (&LimitValue::Limitless, &LimitValue::Limitless))
   }
 
-  pub fn greater_of_lower_limits<'a>(&'a self, other: &'a Interval<T>) -> &'a LimitValue<T> {
+  /// Return the larger (narrower marginal, more constrained) of the lower limits of this interval and the given interval `other`.
+  ///
+  /// - params
+  ///     - other: limit value for comparison
+  /// - return: greater limit value
+  pub(crate) fn greater_of_lower_limits<'a>(&'a self, other: &'a Interval<T>) -> &'a LimitValue<T> {
     if *self.as_lower_limit() == LimitValue::Limitless {
       other.as_lower_limit()
     } else if *other.as_lower_limit() == LimitValue::Limitless {
@@ -377,7 +461,12 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
-  pub fn lesser_of_upper_limits<'a>(&'a self, other: &'a Interval<T>) -> &'a LimitValue<T> {
+  /// Return the smaller (narrower marginal, more constrained) of the upper limits of this interval and the given interval `other`.
+  ///
+  /// - params
+  ///     - other: limit value for comparison
+  /// - return: lesser limit value
+  pub(crate) fn lesser_of_upper_limits<'a>(&'a self, other: &'a Interval<T>) -> &'a LimitValue<T> {
     if *self.as_upper_limit() == LimitValue::Limitless {
       other.as_upper_limit()
     } else if *other.as_upper_limit() == LimitValue::Limitless {
@@ -389,22 +478,22 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
-  pub fn greater_of_lower_included_in_intersection(&self, other: &Interval<T>) -> bool {
+  fn greater_of_lower_included_in_intersection(&self, other: &Interval<T>) -> bool {
     let limit = self.greater_of_lower_limits(other);
     self.includes(&limit) && other.includes(&limit)
   }
 
-  pub fn greater_of_lower_included_in_union(&self, other: &Interval<T>) -> bool {
+  fn greater_of_lower_included_in_union(&self, other: &Interval<T>) -> bool {
     let limit = self.greater_of_lower_limits(other);
     self.includes(&limit) || other.includes(&limit)
   }
 
-  pub fn lesser_of_upper_included_in_intersection(&self, other: &Interval<T>) -> bool {
+  fn lesser_of_upper_included_in_intersection(&self, other: &Interval<T>) -> bool {
     let limit = self.lesser_of_upper_limits(other);
     self.includes(&limit) && other.includes(&limit)
   }
 
-  pub fn lesser_of_upper_included_in_union(&self, other: &Interval<T>) -> bool {
+  fn lesser_of_upper_included_in_union(&self, other: &Interval<T>) -> bool {
     let limit = self.lesser_of_upper_limits(other);
     self.includes(&limit) || other.includes(&limit)
   }
@@ -413,7 +502,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
   ///
   /// other 比較対象の区間
   /// return この区間の下側の補区間と、与えた区間の共通部分。存在しない場合は `None`
-  pub fn left_complement_relative_to(&self, other: &Interval<T>) -> Option<Interval<T>> {
+  fn left_complement_relative_to(&self, other: &Interval<T>) -> Option<Interval<T>> {
     // この区間の下側限界値の方が小さいか等しい場合、下側の補区間に共通部分は無い
     if self.lower <= other.lower {
       None
@@ -427,7 +516,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
-  pub fn right_complement_relative_to(&self, other: &Interval<T>) -> Option<Interval<T>> {
+  fn right_complement_relative_to(&self, other: &Interval<T>) -> Option<Interval<T>> {
     // この区間の上側限界値の方が大きいか等しい場合、上側の補区間に共通部分は無い
     if self.upper >= other.upper {
       None

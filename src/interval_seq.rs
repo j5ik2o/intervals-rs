@@ -120,7 +120,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     self.intervals.is_empty()
   }
 
-  /// Creates empty IntervalSeq.
+  /// Generates empty IntervalSeq.
   ///
   /// - return: `IntervalSeq`
   pub fn empty() -> Self {
