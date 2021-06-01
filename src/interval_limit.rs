@@ -62,7 +62,7 @@ impl<T: Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> IntervalLimi
     self.lower
   }
 
-  pub fn get_value(&self) -> &LimitValue<T> {
+  pub fn as_value(&self) -> &LimitValue<T> {
     &self.value
   }
 

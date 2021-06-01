@@ -1,6 +1,5 @@
-use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 
 use crate::interval_limit::IntervalLimit;
 use crate::LimitValue;
@@ -29,7 +28,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Part
     } else if self.is_empty() ^ other.is_empty() {
       false
     } else if self.is_single_element() & other.is_single_element() {
-      self.lower_limit() == other.lower_limit()
+      self.as_lower_limit() == other.as_lower_limit()
     } else if self.is_single_element() ^ other.is_single_element() {
       false
     } else {
@@ -98,10 +97,10 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
   ///     - other: an `Interval`
   /// - return: `true` for full comprehension, `false` otherwise
   pub fn covers(&self, other: &Interval<T>) -> bool {
-    let lower_pass = self.includes(other.lower_limit())
-      || self.lower_limit() == other.lower_limit() && !other.includes_lower_limit();
-    let upper_pass = self.includes(other.upper_limit())
-      || self.upper_limit() == other.upper_limit() && !other.includes_upper_limit();
+    let lower_pass = self.includes(other.as_lower_limit())
+      || self.as_lower_limit() == other.as_lower_limit() && !other.includes_lower_limit();
+    let upper_pass = self.includes(other.as_upper_limit())
+      || self.as_upper_limit() == other.as_upper_limit() && !other.includes_upper_limit();
     lower_pass && upper_pass
   }
 
@@ -138,15 +137,15 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     } else if !self.has_lower_limit() {
       false
     } else {
-      self.upper_limit() == self.lower_limit() && !self.is_empty()
+      self.as_upper_limit() == self.as_lower_limit() && !self.is_empty()
     }
   }
 
   pub fn empty_of_same_type(&self) -> Interval<T> {
     self.new_of_same_type(
-      self.lower_limit().clone(),
+      self.as_lower_limit().clone(),
       false,
-      self.lower_limit().clone(),
+      self.as_lower_limit().clone(),
       false,
     )
   }
@@ -179,7 +178,8 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     if !self.has_upper_limit() {
       false
     } else {
-      *self.upper_limit() < *value || *self.upper_limit() == *value && !self.includes_upper_limit()
+      *self.as_upper_limit() < *value
+        || *self.as_upper_limit() == *value && !self.includes_upper_limit()
     }
   }
 
@@ -192,7 +192,8 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     if !self.has_lower_limit() {
       false
     } else {
-      *self.lower_limit() > *value || *self.lower_limit() == *value && !self.includes_lower_limit()
+      *self.as_lower_limit() > *value
+        || *self.as_lower_limit() == *value && !self.includes_lower_limit()
     }
   }
 
@@ -217,9 +218,9 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
   ///
   /// - return: `true` if it's empty, `false` otherwise.
   pub fn is_empty(&self) -> bool {
-    match (self.upper_limit(), self.lower_limit()) {
+    match (self.as_upper_limit(), self.as_lower_limit()) {
       (&LimitValue::Limitless, &LimitValue::Limitless) => false,
-      _ => self.is_open() && self.upper_limit() == self.lower_limit(),
+      _ => self.is_open() && self.as_upper_limit() == self.as_lower_limit(),
     }
   }
 
@@ -229,14 +230,14 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     let mut u = upper.clone();
     if !upper.is_infinity()
       && !lower.is_infinity()
-      && upper.get_value() == lower.get_value()
+      && upper.as_value() == lower.as_value()
       && (lower.is_open() ^ upper.is_open())
     {
       if lower.is_open() {
-        l = IntervalLimit::lower(true, lower.get_value().clone());
+        l = IntervalLimit::lower(true, lower.as_value().clone());
       }
       if upper.is_open() {
-        u = IntervalLimit::upper(true, upper.get_value().clone());
+        u = IntervalLimit::upper(true, upper.as_value().clone());
       }
     }
     Self { lower: l, upper: u }
@@ -281,9 +282,9 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
   ///     - other: a target interval
   /// - return: `true` if the common part exists, `false` otherwise
   pub fn intersects(&self, other: &Interval<T>) -> bool {
-    if self.equal_both_limitless(&self.upper_limit(), &other.upper_limit()) {
+    if self.equal_both_limitless(self.as_upper_limit(), other.as_upper_limit()) {
       true
-    } else if self.equal_both_limitless(&self.lower_limit(), &self.lower_limit()) {
+    } else if self.equal_both_limitless(self.as_lower_limit(), self.as_lower_limit()) {
       true
     } else {
       let g = self.greater_of_lower_limits(other);
@@ -299,11 +300,11 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
-  pub fn upper_limit(&self) -> &LimitValue<T> {
-    self.upper.get_value()
+  pub fn as_upper_limit(&self) -> &LimitValue<T> {
+    self.upper.as_value()
   }
-  pub fn lower_limit(&self) -> &LimitValue<T> {
-    self.lower.get_value()
+  pub fn as_lower_limit(&self) -> &LimitValue<T> {
+    self.lower.as_value()
   }
 
   /// Get whether there is an upper limit or not.
@@ -318,10 +319,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
   ///
   /// - return: `true` if upper limit is present, `false` otherwise
   pub fn has_upper_limit(&self) -> bool {
-    match self.upper_limit() {
-      LimitValue::Limit(_) => true,
-      LimitValue::Limitless => false,
-    }
+    matches!(self.as_upper_limit(), LimitValue::Limit(_))
   }
 
   /// Get whether there is an lower limit or not.
@@ -336,10 +334,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
   ///
   /// - return: `true` if lower limit is present, `false` otherwise
   pub fn has_lower_limit(&self) -> bool {
-    match self.lower_limit() {
-      LimitValue::Limit(_) => true,
-      LimitValue::Limitless => false,
-    }
+    matches!(self.as_lower_limit(), LimitValue::Limit(_))
   }
 
   /// Get whether the upper limit is closed or not.
@@ -371,26 +366,26 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
   }
 
   pub fn greater_of_lower_limits<'a>(&'a self, other: &'a Interval<T>) -> &'a LimitValue<T> {
-    if *self.lower_limit() == LimitValue::Limitless {
-      other.lower_limit()
-    } else if *other.lower_limit() == LimitValue::Limitless {
-      self.lower_limit()
-    } else if self.lower_limit() >= other.lower_limit() {
-      self.lower_limit()
+    if *self.as_lower_limit() == LimitValue::Limitless {
+      other.as_lower_limit()
+    } else if *other.as_lower_limit() == LimitValue::Limitless {
+      self.as_lower_limit()
+    } else if self.as_lower_limit() >= other.as_lower_limit() {
+      self.as_lower_limit()
     } else {
-      other.lower_limit()
+      other.as_lower_limit()
     }
   }
 
   pub fn lesser_of_upper_limits<'a>(&'a self, other: &'a Interval<T>) -> &'a LimitValue<T> {
-    if *self.upper_limit() == LimitValue::Limitless {
-      other.upper_limit()
-    } else if *other.upper_limit() == LimitValue::Limitless {
-      self.upper_limit()
-    } else if self.upper_limit() <= other.upper_limit() {
-      self.upper_limit()
+    if *self.as_upper_limit() == LimitValue::Limitless {
+      other.as_upper_limit()
+    } else if *other.as_upper_limit() == LimitValue::Limitless {
+      self.as_upper_limit()
+    } else if self.as_upper_limit() <= other.as_upper_limit() {
+      self.as_upper_limit()
     } else {
-      other.upper_limit()
+      other.as_upper_limit()
     }
   }
 
@@ -424,9 +419,9 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
       None
     } else {
       Some(self.new_of_same_type(
-        other.lower_limit().clone(),
+        other.as_lower_limit().clone(),
         other.includes_lower_limit(),
-        self.lower_limit().clone(),
+        self.as_lower_limit().clone(),
         !self.includes_lower_limit(),
       ))
     }
@@ -438,9 +433,9 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
       None
     } else {
       Some(self.new_of_same_type(
-        self.upper_limit().clone(),
+        self.as_upper_limit().clone(),
         !self.includes_upper_limit(),
-        other.upper_limit().clone(),
+        other.as_upper_limit().clone(),
         other.includes_upper_limit(),
       ))
     }
@@ -454,7 +449,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Disp
     if self.is_empty() {
       write!(f, "{{}}")
     } else if self.is_single_element() {
-      write!(f, "{{{}}}", self.lower_limit().to_string())
+      write!(f, "{{{}}}", self.as_lower_limit().to_string())
     } else {
       let mut str = String::new();
       if self.includes_lower_limit() {
@@ -463,13 +458,13 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Disp
         str.push('(');
       }
       if self.has_lower_limit() {
-        str.push_str(&self.lower_limit().to_string());
+        str.push_str(&self.as_lower_limit().to_string());
       } else {
         str.push_str(&"Infinity");
       }
       str.push_str(&", ");
       if self.has_upper_limit() {
-        str.push_str(&self.upper_limit().to_string());
+        str.push_str(&self.as_upper_limit().to_string());
       } else {
         str.push_str(&"Infinity");
       }

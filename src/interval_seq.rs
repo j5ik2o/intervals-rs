@@ -1,5 +1,4 @@
 use std::cmp::Ordering;
-use std::convert::TryFrom;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::slice::Iter;
@@ -177,9 +176,9 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
       uppers.sort_by(|a, b| b.partial_cmp(&a).unwrap());
       let upper = uppers.get(0).unwrap();
       first.new_of_same_type(
-        lower.get_value().clone(),
+        lower.as_value().clone(),
         lower.is_closed(),
-        upper.get_value().clone(),
+        upper.as_value().clone(),
         upper.is_closed(),
       )
     }

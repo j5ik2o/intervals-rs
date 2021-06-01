@@ -2,7 +2,7 @@ use once_cell::sync::Lazy;
 
 use crate::{Interval, LimitValue};
 use rust_decimal::Decimal;
-use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
+use rust_decimal::prelude::FromPrimitive;
 
 static c5_10c: Lazy<Interval<i32>> =
   Lazy::new(|| Interval::closed(LimitValue::Limit(5), LimitValue::Limit(10)));
