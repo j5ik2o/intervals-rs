@@ -98,27 +98,31 @@ impl Ordered {
   }
 }
 
+/// A structure that represents an interval sequence (a sequence of multiple Intervals).
 pub struct IntervalSeq<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> {
+  /// interval sequence
   intervals: Vec<Interval<T>>,
+  /// ordered
   ordered: Ordered,
 }
 
 impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> IntervalSeq<T> {
-  /// Add the `Interval` element to this `IntervalSeq`.
+
+  /// Add an interval element to this interval sequence.
   ///
-  /// - value: `Interval`
+  /// - value: an interval
   pub fn append(&mut self, value: &Interval<T>) {
     self.intervals.push(value.clone());
   }
 
-  /// Returns whether the intervals elements are empty.
+  /// Return whether the interval sequence are empty.
   ///
-  /// return: true if the intervals elements are empty
+  /// return: true if the interval sequence are empty
   pub fn is_empty(&self) -> bool {
     self.intervals.is_empty()
   }
 
-  /// Generates empty IntervalSeq.
+  /// Generate empty interval sequence.
   ///
   /// - return: `IntervalSeq`
   pub fn empty() -> Self {
@@ -140,7 +144,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
-  /// Returns the smallest interval that encompasses all the element intervals.
+  /// Return the smallest interval that encompasses all the element intervals.
   ///
   /// - return: the smallest interval that encompasses all the elemental intervals.
   /// - panic: if none of the elements are present
@@ -200,7 +204,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
-  /// Returns the sorted intervals where adjacent intervals overlap each other as an interval sequence.
+  /// Return the sorted intervals where adjacent intervals overlap each other as an interval sequence.
   ///
   /// If the number of intervals is less than two, an empty sequence of intervals is returned.
   /// If the intervals do not overlap or are tangent to each other, the intervals are not included in the result element.
@@ -225,6 +229,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     }
   }
 
+  /// Gets an iterator of this interval sequence.
   pub fn iter(&mut self) -> Iter<Interval<T>> {
     let mut l = self.intervals.clone();
     l.sort_by(|a, b| self.ordered.compare(a, b));
@@ -232,10 +237,12 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
     self.intervals.iter()
   }
 
+  /// Gets the len of this interval sequence.
   pub fn len(&self) -> usize {
     self.intervals.len()
   }
 
+  /// Gets the interval in this interval sequence by index
   pub fn get(&self, idx: usize) -> Option<&Interval<T>> {
     self.intervals.get(idx)
   }
