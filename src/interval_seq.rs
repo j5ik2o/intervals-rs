@@ -3,7 +3,7 @@ use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::slice::Iter;
 
-use crate::{Interval, IntervalLimit};
+use crate::{Interval, IntervalLimit, to_ordering};
 
 #[derive(Clone)]
 pub enum Ordered {
@@ -17,14 +17,7 @@ pub enum Ordered {
   },
 }
 
-pub fn to_ordering(n: i8) -> Ordering {
-  match n {
-    -1 => Ordering::Less,
-    0 => Ordering::Equal,
-    1 => Ordering::Greater,
-    _ => panic!(),
-  }
-}
+
 
 impl Ordered {
   fn lower_factor(&self) -> i8 {

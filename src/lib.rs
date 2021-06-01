@@ -19,3 +19,13 @@ pub use crate::limit_value::LimitValue;
 pub use crate::interval_limit::IntervalLimit;
 pub use crate::interval::Interval;
 pub use crate::interval_seq::IntervalSeq;
+use std::cmp::Ordering;
+
+pub fn to_ordering(n: i8) -> Ordering {
+    match n {
+        -1 => Ordering::Less,
+        0 => Ordering::Equal,
+        1 => Ordering::Greater,
+        _ => panic!(),
+    }
+}
