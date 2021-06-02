@@ -6,7 +6,7 @@ authors = ["Junichi Kato <j5ik2o@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 keywords = ["intervals"]
-categories = ["data-structures"]
+categories = ["data-structures", "algorithms"]
 readme = "README.md"
 repository = "https://github.com/j5ik2o/intervals-rs"
 
