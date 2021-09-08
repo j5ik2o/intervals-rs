@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
-use std::slice::Iter;
 
 use crate::{Interval, IntervalLimit, to_ordering};
 
@@ -107,7 +106,6 @@ pub struct IntervalSeq<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq 
 }
 
 impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> IntervalSeq<T> {
-
   /// Add an interval element to this interval sequence.
   ///
   /// - value: an interval
@@ -127,13 +125,13 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
   /// - return: `IntervalSeq`
   pub fn empty() -> Self {
     let intervals: Vec<Interval<T>> = vec![];
-    Self::new(&intervals)
+    Self::new(intervals)
   }
 
-  pub fn new(values: &[Interval<T>]) -> Self {
+  pub fn new(values: impl IntoIterator<Item = Interval<T>>) -> Self {
     let mut intervals: Vec<Interval<T>> = vec![];
-    values.iter().for_each(|e| {
-      intervals.push(e.clone());
+    values.into_iter().for_each(|e| {
+      intervals.push(e);
     });
     Self {
       intervals,
@@ -150,7 +148,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
   /// - panic: if none of the elements are present
   pub fn extent(&self) -> Interval<T> {
     if self.intervals.is_empty() {
-      panic!("")
+      panic!("self.interval is empty!")
     }
     let first = self.intervals.get(0).unwrap();
     if self.intervals.len() == 1 {
@@ -189,7 +187,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
   pub fn gap(&self) -> Self {
     if self.intervals.len() < 2 {
       let values: Vec<Interval<T>> = vec![];
-      Self::new(&values)
+      Self::new(values)
     } else {
       let mut values: Vec<Interval<T>> = vec![];
       for i in 1usize..self.intervals.len() {
@@ -200,7 +198,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
           values.push(gap);
         }
       }
-      Self::new(&values)
+      Self::new(values)
     }
   }
 
@@ -214,7 +212,7 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
   pub fn intersections(&self) -> Self {
     if self.intervals.len() < 2 {
       let values: Vec<Interval<T>> = vec![];
-      Self::new(&values)
+      Self::new(values)
     } else {
       let mut values: Vec<Interval<T>> = vec![];
       for i in 1usize..self.intervals.len() {
@@ -225,16 +223,24 @@ impl<T: Debug + Display + Clone + Hash + Eq + Ord + PartialEq + PartialOrd> Inte
           values.push(gap);
         }
       }
-      Self::new(&values)
+      Self::new(values)
     }
   }
 
   /// Gets an iterator of this interval sequence.
-  pub fn iter(&mut self) -> Iter<Interval<T>> {
+  pub fn iter(&mut self) -> impl Iterator<Item = &Interval<T>> {
     let mut l = self.intervals.clone();
     l.sort_by(|a, b| self.ordered.compare(a, b));
     self.intervals = l;
     self.intervals.iter()
+  }
+
+  /// Gets an into iterator of this interval sequence.
+  pub fn into_iter(mut self) -> impl IntoIterator<Item = Interval<T>> {
+    let mut l = self.intervals.clone();
+    l.sort_by(|a, b| self.ordered.compare(a, b));
+    self.intervals = l;
+    self.intervals.into_iter()
   }
 
   /// Gets the len of this interval sequence.
