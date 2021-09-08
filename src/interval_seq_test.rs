@@ -123,20 +123,20 @@ fn test06_extent() {
   values.push(o10_12c.clone());
   values.push(c20_25c.clone());
 
-  let interval_sequence1 = IntervalSeq::new(&values);
+  let interval_sequence1 = IntervalSeq::new(values.clone());
   assert_eq!(
     interval_sequence1.extent(),
     Interval::closed(LimitValue::Limit(5), LimitValue::Limit(25))
   );
 
   values.push(_o18.clone());
-  let interval_sequence2 = IntervalSeq::new(&values);
+  let interval_sequence2 = IntervalSeq::new(values.clone());
   assert_eq!(
     interval_sequence2.extent(),
     Interval::closed(LimitValue::Limitless, LimitValue::Limit(25))
   );
 
   values.push(all.clone());
-  let interval_sequence3 = IntervalSeq::new(&values);
+  let interval_sequence3 = IntervalSeq::new(values);
   assert_eq!(interval_sequence3.extent(), *all);
 }
