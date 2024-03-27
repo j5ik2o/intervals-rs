@@ -17,5 +17,5 @@ github = { repository = "j5ik2o/intervals-rs", workflow = "Rust" }
 rand = "0.8.5"
 
 [dev-dependencies]
-rust_decimal = "1.34.3"
+rust_decimal = "1.35.0"
 once_cell = "1.19.0"
